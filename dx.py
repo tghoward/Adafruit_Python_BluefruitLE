@@ -7,6 +7,7 @@ import Queue
 import uuid
 import argparse
 import os
+import time
 
 class Attrs:
     CradleService = uuid.UUID("F0ABA0B1-EBFA-F96F-28DA-076C35A521DB");
@@ -61,8 +62,13 @@ class Share2UART (OriginalUART):
   HEARTBEAT_UUID = Attrs.HeartBeat2
   # UART_SERVICE_UUID = Attrs.CradleService2
   UART_SERVICE_UUID = Attrs.VENDOR_UUID
-  TX_CHAR_UUID = Attrs.Command2
-  RX_CHAR_UUID = Attrs.Response2
+  TX_CHAR_UUID = Attrs.ShareMessageReceiver2
+  RX_CHAR_UUID = Attrs.ShareMessageResponse2
+  SendDataUUID = Attrs.ShareMessageReceiver2
+  RcveDataUUID = Attrs.ShareMessageResponse2
+  CommandUUID  = Attrs.Command2
+  ResponseUUID = Attrs.Response2
+  AUTH_UUID    = Attrs.AuthenticationCode2
   def __init__(self, device):
       """Initialize UART from provided bluez device."""
       # Find the UART service and characteristics associated with the device.
@@ -93,21 +99,28 @@ class Share2UART (OriginalUART):
       self.pair_auth_code(SERIAL)
   def pair_auth_code (self, serial):
       print "sending auth code"
-      self._auth = self._uart.find_characteristic(Attrs.AuthenticationCode2)
+      self._auth = self._uart.find_characteristic(self.AUTH_UUID)
       print self._auth
       # self._auth.
       msg = bytearray(serial + "000000")
       self._auth.write_value(str(msg))
-      self._rx.start_notify(self._rx_received)
+      if not self._rx.notifying:
+        self._rx.start_notify(self._rx_received)
   def setup_dexcom (self):
     self._tx = self._uart.find_characteristic(self.TX_CHAR_UUID)
     self._rx = self._uart.find_characteristic(self.RX_CHAR_UUID)
     # Use a queue to pass data received from the RX property change back to
     # the main thread in a thread-safe way.
     self._heartbeat = self._uart.find_characteristic(self.HEARTBEAT_UUID)
-    self._heartbeat.start_notify(self._heartbeat_tick)
+    if not self._heartbeat.notifying:
+      self._heartbeat.start_notify(self._heartbeat_tick)
+    self._char_rcv_data = self._uart.find_characteristic(self.RcveDataUUID)
+    if not self._char_rcv_data.notifying:
+      self._char_rcv_data.start_notify(self._on_rcv)
   def _heartbeat_tick (self, data):
-    print "_heartbeat_tick", data
+    print "_heartbeat_tick", str(data).encode('hex')
+  def _on_rcv (self, data):
+    print "_on_rcv", str(data).encode('hex')
 
 
 class BothShare (ShareUART):
@@ -178,6 +191,7 @@ def main():
     print "ADVERTISED"
     print device.advertised
     # device.connectProfile(str(device.advertised[-1]))
+    # device.connectProfile(str(Attrs.CradleService2))
     # print device.gatt_services
     # Once connected do everything else in a try/finally to make sure the device
     # is disconnected when done.
@@ -195,11 +209,13 @@ def main():
 
         # Write a string to the TX characteristic.
         # uart.write('Hello world!\r\n')
-        print("Sent 'Hello world!' to the device.")
+        # print("Sent 'Hello world!' to the device.")
+        print "wait for few seconds for some kind of heartbeat"
 
         # Now wait up to one minute to receive data from the device.
         print('Waiting up to 60 seconds to receive data from the device...')
         received = None
+        time.sleep(10)
         # received = uart.read(timeout_sec=60)
         if received is not None:
             # Received data, print it out.
