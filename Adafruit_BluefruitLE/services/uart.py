@@ -41,12 +41,16 @@ class UART(ServiceBase):
     SERVICES = [UART_SERVICE_UUID]
     CHARACTERISTICS = [TX_CHAR_UUID, RX_CHAR_UUID]
 
+    UART_SERVICE_UUID = UART_SERVICE_UUID
+    TX_CHAR_UUID = TX_CHAR_UUID
+    RX_CHAR_UUID = RX_CHAR_UUID
+
     def __init__(self, device):
         """Initialize UART from provided bluez device."""
         # Find the UART service and characteristics associated with the device.
-        self._uart = device.find_service(UART_SERVICE_UUID)
-        self._tx = self._uart.find_characteristic(TX_CHAR_UUID)
-        self._rx = self._uart.find_characteristic(RX_CHAR_UUID)
+        self._uart = device.find_service(self.UART_SERVICE_UUID)
+        self._tx = self._uart.find_characteristic(self.TX_CHAR_UUID)
+        self._rx = self._uart.find_characteristic(self.RX_CHAR_UUID)
         # Use a queue to pass data received from the RX property change back to
         # the main thread in a thread-safe way.
         self._queue = Queue.Queue()
