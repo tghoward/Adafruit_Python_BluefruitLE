@@ -8,6 +8,8 @@ import uuid
 import argparse
 import os
 import time
+from dexcom_reader import readdata
+import xml.etree.ElementTree as etree
 
 class Attrs:
     CradleService = uuid.UUID("F0ABA0B1-EBFA-F96F-28DA-076C35A521DB");
@@ -104,9 +106,8 @@ class Share2UART (OriginalUART):
       # self._auth.
       msg = bytearray(serial + "000000")
       self._auth.write_value(str(msg))
-      if not self._rx.notifying:
-        self._rx.start_notify(self._rx_received)
   def setup_dexcom (self):
+    self.remainder = bytearray( )
     self._tx = self._uart.find_characteristic(self.TX_CHAR_UUID)
     self._rx = self._uart.find_characteristic(self.RX_CHAR_UUID)
     # Use a queue to pass data received from the RX property change back to
@@ -115,13 +116,26 @@ class Share2UART (OriginalUART):
     if not self._heartbeat.notifying:
       self._heartbeat.start_notify(self._heartbeat_tick)
     self._char_rcv_data = self._uart.find_characteristic(self.RcveDataUUID)
-    if not self._char_rcv_data.notifying:
-      self._char_rcv_data.start_notify(self._on_rcv)
+    if self._rx.notifying:
+      self._rx.stop_notify( )
+    if not self._rx.notifying:
+      self._rx.start_notify(self._rx_received)
   def _heartbeat_tick (self, data):
     print "_heartbeat_tick", str(data).encode('hex')
   def _on_rcv (self, data):
     print "_on_rcv", str(data).encode('hex')
 
+  def read (self, size=1, timeout_sec=None):
+    spool = bytearray( )
+    spool.extend(self.remainder)
+    self.remainder = bytearray( )
+    while len(spool) < size:
+      spool.extend(self.pop(timeout_sec=timeout_sec))
+      time.sleep(.100)
+    self.remainder.extend(spool[size:])
+    return str(spool[:size])
+  def pop (self, timeout_sec=None):
+    return super(Share2UART, self).read(timeout_sec=timeout_sec)
 
 class BothShare (ShareUART):
   ADVERTISED = ShareUART.ADVERTISED + Share2UART.ADVERTISED
@@ -134,6 +148,27 @@ class BothShare (ShareUART):
   TX_CHAR_UUID = Attrs.Command2
   RX_CHAR_UUID = Attrs.Response2
   pass
+
+class Device (readdata.Dexcom):
+  def __init__ (self, uart):
+    self.uart = uart
+
+  def Connect (self):
+    return True
+
+  @property
+  def port (self):
+    return self.uart
+
+  def Disconnect (self):
+    return True
+
+  def flush (self):
+    return True
+
+  def write (self, data, *args, **kwargs):
+    prefix = str(bytearray([ 0x01, 0x01 ]))
+    return self.port.write(prefix + data, *args, **kwargs)
 
 class UART (Share2UART):
   pass
@@ -207,6 +242,10 @@ def main():
         # and start interacting with it.
         uart = UART(device)
 
+        dxcom = Device(uart)
+        print dxcom.Ping( )
+        print etree.tostring(dxcom.GetFirmwareHeader( ))
+        print etree.tostring(dxcom.ReadManufacturingData( ))
         # Write a string to the TX characteristic.
         # uart.write('Hello world!\r\n')
         # print("Sent 'Hello world!' to the device.")
