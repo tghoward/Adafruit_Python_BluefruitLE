@@ -41,6 +41,7 @@ class BluezGattService(GattService):
         """Create an instance of the GATT service from the provided bluez
         DBus object.
         """
+        self._service = dbus.Interface(dbus_obj, _SERVICE_INTERFACE)
         self._props = dbus.Interface(dbus_obj, 'org.freedesktop.DBus.Properties')
 
     @property

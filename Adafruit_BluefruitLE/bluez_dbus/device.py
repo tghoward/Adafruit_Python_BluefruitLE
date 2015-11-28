@@ -49,6 +49,7 @@ class BluezDevice(Device):
         self._device = dbus.Interface(dbus_obj, _INTERFACE)
         self._props = dbus.Interface(dbus_obj, 'org.freedesktop.DBus.Properties')
         self._connected = threading.Event()
+        self._paired = threading.Event()
         self._disconnected = threading.Event()
         self._props.connect_to_signal('PropertiesChanged', self._prop_changed)
 
@@ -58,12 +59,43 @@ class BluezDevice(Device):
         # Skip any change events not for this adapter interface.
         if iface != _INTERFACE:
             return
+        print "changed", changed_props.keys( ), changed_props.get('Paired'), changed_props
+        if 'Paired' in changed_props.keys( ) and changed_props.get('Paired') == 1:
+            print "PAIRED!!!"
+            self._paired.set()
         # If connected then fire the connected event.
         if 'Connected' in changed_props and changed_props['Connected'] == 1:
             self._connected.set()
         # If disconnected then fire the disconnected event.
         if 'Connected' in changed_props and changed_props['Connected'] == 0:
             self._disconnected.set()
+
+    def pair (self, timeout_sec=TIMEOUT_SEC):
+        """Pair with device.  If not paired within the specified timeout
+        then an exception is thrown.
+        """
+        self._paired.clear()
+        self._device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=timeout_sec)
+        if not self._paired.wait(timeout_sec):
+            raise RuntimeError('Exceeded timeout waiting to Pair with device!')
+    def pair_error (self):
+      print "ERRROR"
+    def pair_reply (self):
+      print "PAIRED"
+      self._paired.set()
+      
+    def connectProfile(self, profile, timeout_sec=TIMEOUT_SEC):
+        """Connect to the device.  If not connected within the specified timeout
+        then an exception is thrown.
+        """
+        self._connected.clear()
+        def rcvd ( ):
+          print "connected to profile", profile
+        def errored ( ):
+          print "error connecting to profile", profile
+        self._device.ConnectProfile(profile, reply_handler=rcvd, error_handler=errored)
+        if not self._connected.wait(timeout_sec):
+            raise RuntimeError('Exceeded timeout waiting to connect to device!')
 
     def connect(self, timeout_sec=TIMEOUT_SEC):
         """Connect to the device.  If not connected within the specified timeout
@@ -148,6 +180,26 @@ class BluezDevice(Device):
     def name(self):
         """Return the name of this device."""
         return self._props.Get(_INTERFACE, 'Name')
+
+    @property
+    def gatt_services (self):
+        """ List of GATT service object paths. Each referenced
+          object exports the org.bluez.GattService1 interface and
+          represents a remote GATT service. This property will be
+          updated once all remote GATT services of this device
+          have been discovered and exported over D-Bus.
+        """
+        # help(self._props)
+        # print self._props
+        # return self._props['GattServices']
+        # return self._props.Get(_SERVICE_INTERFACE, 'GattServices')
+        return self._props.Get(_INTERFACE, 'GattServices')
+
+
+    @property
+    def is_paired (self):
+        """Indicates if the remote device is paired."""
+        return self._props.Get(_INTERFACE, 'Paired')
 
     @property
     def is_connected(self):
