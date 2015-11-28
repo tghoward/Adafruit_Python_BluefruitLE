@@ -73,6 +73,40 @@ class BluezGattCharacteristic(GattCharacteristic):
         """Return the UUID of this GATT characteristic."""
         return uuid.UUID(str(self._props.Get(_CHARACTERISTIC_INTERFACE, 'UUID')))
 
+    @property
+    def notifying (self):
+        """
+          True, if notifications or indications on this
+          characteristic are currently enabled.
+        """
+        return self._props.Get(_CHARACTERISTIC_INTERFACE, 'Notifying')
+
+    @property
+    def flags (self):
+        """
+      Defines how the characteristic value can be used. See
+      Core spec "Table 3.5: Characteristic Properties bit
+      field", and "Table 3.8: Characteristic Extended
+      Properties bit field". Allowed values:
+
+        "broadcast"
+        "read"
+        "write-without-response"
+        "write"
+        "notify"
+        "indicate"
+        "authenticated-signed-writes"
+        "reliable-write"
+        "writable-auxiliaries"
+        "encrypt-read"
+        "encrypt-write"
+        "encrypt-authenticated-read"
+        "encrypt-authenticated-write"
+
+        """
+        return self._props.Get(_CHARACTERISTIC_INTERFACE, 'Flags')
+
+
     def read_value(self):
         """Read the value of this characteristic."""
         return self._characteristic.ReadValue()
