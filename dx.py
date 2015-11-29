@@ -246,6 +246,14 @@ def main():
         print dxcom.Ping( )
         print etree.tostring(dxcom.GetFirmwareHeader( ))
         print etree.tostring(dxcom.ReadManufacturingData( ))
+
+        records = [ ]
+        for item in dxcom.iter_records('EGV_DATA'):
+          print "ITEM", item
+          records.append(item.to_dict( ))
+          # print len(records)
+          if len(records) >= 10:
+            break
         # Write a string to the TX characteristic.
         # uart.write('Hello world!\r\n')
         # print("Sent 'Hello world!' to the device.")
