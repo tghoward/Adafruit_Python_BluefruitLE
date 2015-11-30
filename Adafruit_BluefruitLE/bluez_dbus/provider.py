@@ -69,7 +69,7 @@ class BluezProvider(Provider):
         self._bluez = dbus.Interface(self._bus.get_object('org.bluez', '/'),
                                      'org.freedesktop.DBus.ObjectManager')
 
-    def run_mainloop_with(self, target):
+    def run_mainloop_with(self, target, quit_with_loop=True):
         """Start the OS's main loop to process asyncronous BLE events and then
         run the specified target function in a background thread.  Target
         function should be a function that takes no parameters and optionally
@@ -102,7 +102,10 @@ class BluezProvider(Provider):
             # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
             raise self._exception[1], None, self._exception[2]
         else:
-            sys.exit(self._return_code)
+            if quit_with_loop:
+                sys.exit(self._return_code)
+            else:
+                return self._return_code
 
     def _user_thread_main(self, target):
         """Main entry point for the thread that will run user's code."""
