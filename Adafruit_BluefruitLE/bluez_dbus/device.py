@@ -59,9 +59,7 @@ class BluezDevice(Device):
         # Skip any change events not for this adapter interface.
         if iface != _INTERFACE:
             return
-        print "changed", changed_props.keys( ), changed_props.get('Paired'), changed_props
         if 'Paired' in changed_props.keys( ) and changed_props.get('Paired') == 1:
-            print "PAIRED!!!"
             self._paired.set()
         # If connected then fire the connected event.
         if 'Connected' in changed_props and changed_props['Connected'] == 1:
@@ -79,9 +77,8 @@ class BluezDevice(Device):
         if not self._paired.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting to Pair with device!')
     def pair_error (self):
-      print "ERRROR"
+        raise RuntimeError('Exceeded timeout waiting to Pair with device!')
     def pair_reply (self):
-      print "PAIRED"
       self._paired.set()
       
     def connectProfile(self, profile, timeout_sec=TIMEOUT_SEC):
@@ -90,9 +87,9 @@ class BluezDevice(Device):
         """
         self._connected.clear()
         def rcvd ( ):
-          print "connected to profile", profile
+          return True
         def errored ( ):
-          print "error connecting to profile", profile
+            raise RuntimeError('Error connect to profile!')
         self._device.ConnectProfile(profile, reply_handler=rcvd, error_handler=errored)
         if not self._connected.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting to connect to device!')
@@ -189,11 +186,9 @@ class BluezDevice(Device):
           updated once all remote GATT services of this device
           have been discovered and exported over D-Bus.
         """
-        # help(self._props)
-        # print self._props
-        # return self._props['GattServices']
-        # return self._props.Get(_SERVICE_INTERFACE, 'GattServices')
-        return self._props.Get(_INTERFACE, 'GattServices')
+        # XXX: The advertised property seems to do what this is documented
+        # to do?
+        # return self._props.Get(_INTERFACE, 'GattServices')
 
 
     @property
