@@ -63,8 +63,6 @@ class BluezAdapter(Adapter):
         """Return the name of this BLE network adapter."""
         return self._props.Get(_INTERFACE, 'Name')
 
-
-
     def start_scan(self, timeout_sec=TIMEOUT_SEC):
         """Start scanning for BLE devices with this adapter."""
         self._scan_started.clear()
