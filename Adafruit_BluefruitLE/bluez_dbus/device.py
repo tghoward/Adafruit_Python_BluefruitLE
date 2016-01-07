@@ -76,8 +76,8 @@ class BluezDevice(Device):
         self._device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=timeout_sec)
         if not self._paired.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting to Pair with device!')
-    def pair_error (self):
-        raise RuntimeError('Exceeded timeout waiting to Pair with device!')
+    def pair_error (self, error):
+        raise RuntimeError('Exceeded timeout waiting to Pair with device! %s', error)
     def pair_reply (self):
       self._paired.set()
       
