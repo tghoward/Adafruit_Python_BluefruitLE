@@ -38,7 +38,17 @@ sudo apt-get -y install libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libi
 wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.33.tar.gz
 tar xvfz bluez-5.33.tar.gz
 cd bluez-5.33
-./configure --disable-systemd
+```
+For Rasbpian Wheezy:
+```
+./configure --enable-experimental --disable-systemd
+```
+For Raspbian Jessie:
+```
+./configure --enable-experimental
+```
+Then:
+```
 make
 sudo make install
 sudo cp ./src/bluetoothd /usr/local/bin/
