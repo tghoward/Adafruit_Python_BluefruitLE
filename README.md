@@ -39,7 +39,7 @@ wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.33.tar.gz
 tar xvfz bluez-5.33.tar.gz
 cd bluez-5.33
 ```
-For Rasbpian Wheezy:
+For Rasbpian Wheezy or Intel Edison:
 ```
 ./configure --enable-experimental --disable-systemd
 ```
