@@ -58,6 +58,14 @@ Finally you'll need to make sure the bluetoothd daemon runs at boot and is run w
 ```
 /usr/local/bin/bluetoothd --experimental &
 ```
+For the Intel Edison, you'll need to edit `init.d/bluetooth`, change `/usr/sbin/bluetoothd` to `/usr/local/bin/bluetoothd`, and add `--experimental` to the line that reads `SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- $NOPLUGIN_OPTION"`, so they read:
+```
+DAEMON=/usr/local/bin/bluetoothd
+```
+and
+```
+SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- --experimental $NOPLUGIN_OPTION"
+```
 
 Save the changed file and reboot the Pi.  Then verify using the command `ps aux | grep bluetoothd` that the bluetoothd daemon is running.
 
