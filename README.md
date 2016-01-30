@@ -67,7 +67,7 @@ and
 SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- --experimental $NOPLUGIN_OPTION"
 ```
 
-Save the changed file and reboot the Pi.  Then verify using the command `ps aux | grep bluetoothd` that the bluetoothd daemon is running.
+Save the changed file and reboot the Pi/Edison.  Then verify using the command `ps aux | grep bluetoothd` that the bluetoothd daemon is running.
 
 ## Mac OSX Requirements
 
