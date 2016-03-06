@@ -35,8 +35,17 @@ def get_provider():
     if _provider is None:
         if sys.platform == 'linux2':
             # Linux platform
-            from .bluez_dbus.provider import BluezProvider
-            _provider = BluezProvider()
+            try:
+              print "importing pydbus"
+              import pydbus
+              print "OK"
+              from .bluez_pydbus.provider import PyDBusProvider
+              _provider = PyDBusProvider()
+              print "OK"
+            except ImportError, e:
+              print "XXX", e
+              from .bluez_dbus.provider import BluezProvider
+              _provider = BluezProvider()
         elif sys.platform == 'darwin':
             # Mac OSX platform
             from .corebluetooth.provider import CoreBluetoothProvider
