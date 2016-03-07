@@ -38,7 +38,17 @@ sudo apt-get -y install libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libi
 wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.33.tar.gz
 tar xvfz bluez-5.33.tar.gz
 cd bluez-5.33
-./configure --disable-systemd
+```
+For Rasbpian Wheezy or Intel Edison:
+```
+./configure --enable-experimental --disable-systemd
+```
+For Raspbian Jessie:
+```
+./configure --enable-experimental
+```
+Then:
+```
 make
 sudo make install
 sudo cp ./src/bluetoothd /usr/local/bin/
@@ -48,8 +58,16 @@ Finally you'll need to make sure the bluetoothd daemon runs at boot and is run w
 ```
 /usr/local/bin/bluetoothd --experimental &
 ```
+For the Intel Edison, you'll need to edit `init.d/bluetooth`, change `/usr/sbin/bluetoothd` to `/usr/local/bin/bluetoothd`, and add `--experimental` to the line that reads `SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- $NOPLUGIN_OPTION"`, so they read:
+```
+DAEMON=/usr/local/bin/bluetoothd
+```
+and
+```
+SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- --experimental $NOPLUGIN_OPTION"
+```
 
-Save the changed file and reboot the Pi.  Then verify using the command `ps aux | grep bluetoothd` that the bluetoothd daemon is running.
+Save the changed file and reboot the Pi/Edison.  Then verify using the command `ps aux | grep bluetoothd` that the bluetoothd daemon is running.
 
 ## Mac OSX Requirements
 
