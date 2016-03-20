@@ -58,7 +58,16 @@ Finally you'll need to make sure the bluetoothd daemon runs at boot and is run w
 ```
 /usr/local/bin/bluetoothd --experimental &
 ```
-For the Intel Edison, you'll need to edit `init.d/bluetooth`, change `/usr/sbin/bluetoothd` to `/usr/local/bin/bluetoothd`, and add `--experimental` to the line that reads `SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- $NOPLUGIN_OPTION"`, so they read:
+
+For the Intel Edison and python support you need to install python-dbus:
+```
+sudo apt-get install python-dbus
+```
+and, if dependencies are needed:
+```
+sudo apt-get -f install
+```
+Then you'll need to edit `init.d/bluetooth`, change `/usr/sbin/bluetoothd` to `/usr/local/bin/bluetoothd`, and add `--experimental` to the line that reads `SSD_OPTIONS="--oknodo --quiet --exec $DAEMON -- $NOPLUGIN_OPTION"`, so they read:
 ```
 DAEMON=/usr/local/bin/bluetoothd
 ```
