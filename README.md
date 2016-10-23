@@ -58,6 +58,10 @@ Finally you'll need to make sure the bluetoothd daemon runs at boot and is run w
 ```
 /usr/local/bin/bluetoothd --experimental &
 ```
+Make sure this line is also in `/etc/rc.local` (might be missing in Jubilinux installs). If missing, you can add it right after the line you just added (but before `exit 0` again)
+```
+bluetooth_rfkill_event >/dev/null 2>&1 &
+```
 
 For the Intel Edison and python support you need to install python-dbus:
 ```
